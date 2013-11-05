@@ -36,12 +36,22 @@ from dactylo import model, texthelpers, urls
 <%namespace name="activities_snippets" file="activities/snippets.mako"/>
 
 
-<%def name="activities_media_list()" filter="trim">
-        <ul class="media-list" id="activities">
+<%def name="activities_table()" filter="trim">
+        <table class="table table-bordered table-condensed table-striped" id="activities">
+            <thead>
+                <tr>
+                    <th>${_(u"Actor")}</th>
+                    <th>${_(u"Verb")}</th>
+                    <th>${_(u"Object")}</th>
+                    <th>${_(u"Target")}</th>
+                </tr>
+            </thead>
+            <tbody>
     % for activity in activities:
-                <%activities_snippets:activity_media_list_item activity="${activity}"/>
+                <%activities_snippets:activity_row activity="${activity}"/>
     % endfor
-        </ul>
+            </tbody>
+        </table>
 </%def>
 
 
@@ -53,7 +63,7 @@ from dactylo import model, texthelpers, urls
 ##        <div class="page-header">
 ##            <h1><%self:brand/></h1>
 ##        </div>
-        <%self:activities_media_list/>
+        <%self:activities_table/>
 </%def>
 
 

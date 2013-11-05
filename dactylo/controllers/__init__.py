@@ -46,10 +46,10 @@ def index(req):
     cursor = model.Activity.find(as_class = collections.OrderedDict)
     pager = paginations.Pager(item_count = cursor.count(), page_number = 1)
     cursor.sort([('updated', pymongo.DESCENDING)])
-    activities = conv.check(conv.uniform_sequence(
-        model.pseudo_activity_to_activity,
+    generic_activities = conv.check(conv.uniform_sequence(
+        conv.specific_activity_to_activity,
         ))(cursor.skip(pager.first_item_index or 0).limit(pager.page_size), state = ctx)
-    return templates.render(ctx, '/index.mako', activities = activities)
+    return templates.render(ctx, '/index.mako', activities = generic_activities)
 
 
 def make_router():

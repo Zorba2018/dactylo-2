@@ -24,39 +24,57 @@
 
 
 <%!
-from dactylo import texthelpers
+from dactylo import conv, texthelpers
 %>
 
 
-<%def name="activity_media_list_item(activity)" filter="trim">
+<%def name="activity_row(activity)" filter="trim">
+                <tr>
+                    <%self:object_cell value="${activity['actor']}"/>
+                    <%self:object_cell value="${activity['verb']}"/>
+                    <%self:object_cell value="${activity['object']}"/>
+                    <%self:object_cell value="${activity.get('target')}"/>
+                </tr>
+</%def>
+
+
+<%def name="object_cell(value)" filter="trim">
+                    <td>
+    % if value is not None:
+        % if isinstance(value, basestring):
 <%
-    actor = activity['actor']
-    object = activity['object']
+            url, error = conv.make_input_to_url(full = True)(value, state = ctx)
 %>\
-            <li class="media">
+            % if error is None:
+                        <a href="${url}">${url}</a>
+            % else:
+                        ${value}
+            % endif
+        % else:
 <%
-    icon = actor.get('icon')
+            display_name = value.get('displayName')
 %>\
-    % if icon is not None:
-                <a class="pull-left" href="#">
-                    <img class="media-object" src="${icon['url']}" alt="${icon.get('displayName') or u''}">
-                </a>
+            % if display_name is not None:
+                        <h4>${display_name}</h4>
+            % endif
+<%
+            description = value.get('description')
+%>\
+            % if description is not None:
+                        ${texthelpers.clean_html(description) | n}
+            % endif
+<%
+            image = value.get('image')
+%>\
+            % if image is not None:
+                % if isinstance(image, basestring):
+                        <img class="img-responsive" src="${image}">
+                % else:
+                        <img alt="${image.get('displayName') or u''}" class="img-responsive" src="${image['url']}">
+                % endif
+            % endif
+        % endif
     % endif
-                <div class="media-body">
-                    <h4 class="media-heading">${object['displayName']}</h4>
-<%
-    description = object.get('description')
-%>\
-    % if description is not None:
-                    ${texthelpers.clean_html(description) | n}
-    % endif
-<%
-    image = object.get('image')
-%>\
-    % if image is not None:
-                    <img alt="${image.get('displayName') or u''}" class="img-responsive" src="${image['url']}">
-    % endif
-                </div>
-            </li>
+                    </td>
 </%def>
 

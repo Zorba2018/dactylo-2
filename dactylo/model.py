@@ -34,7 +34,7 @@ import re
 from biryani1 import strings
 import bson
 
-from . import objects, texthelpers, urls, wsgihelpers
+from . import objects, urls, wsgihelpers
 
 
 uuid_re = re.compile(ur'[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$')
@@ -346,31 +346,6 @@ def is_admin(ctx, check = False):
             raise wsgihelpers.forbidden(ctx, message = ctx._(u"You must be an administrator to access this page."))
         return False
     return True
-
-
-def pseudo_activity_to_activity(value, state = None):
-    if value is None:
-        return value, None
-    if state is None:
-        state = conv.default_state
-    pseudo_activity = value.value
-    # TODO: Call plugins for conversion.
-    # TODO: Use object.objectType to know how to convert activity
-    # Object is a related.
-    related_link = pseudo_activity['object']
-    activity = dict(
-        actor = pseudo_activity['actor'],  # TODO
-        object = dict(
-            description = related_link.get('description'),
-            displayName = related_link.get('title') or state._(u"Untitled Related Link"),
-            image = dict(
-                url = related_link['image_url'],
-                ) if related_link.get('image_url') is not None else None,
-            ),
-        target = pseudo_activity['target'],  # TODO
-        verb = pseudo_activity['verb'],
-        )
-    return activity, None
 
 
 def setup():

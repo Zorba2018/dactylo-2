@@ -593,8 +593,8 @@ def api1_new(req):
     activity.save(ctx, safe = True)
 
 #    message = unicode(json.dumps(activity.value, encoding = 'utf-8', ensure_ascii = False, indent = 2)).encode('utf-8')
-    activity = conv.check(model.pseudo_activity_to_activity)(activity, state = ctx)
-    message = templates.render_def(ctx, '/activities/snippets.mako', 'activity_media_list_item', activity = activity)
+    generic_activity = conv.check(conv.specific_activity_to_activity)(activity, state = ctx)
+    message = templates.render_def(ctx, '/activities/snippets.mako', 'activity_row', activity = generic_activity)
     for client in websocket_clients:
         client.send(message)
 
@@ -605,7 +605,7 @@ def api1_new(req):
             method = req.script_name,
             params = inputs,
             url = req.url.decode('utf-8'),
-            value = activity,
+            value = generic_activity,
             ).iteritems())),
         headers = headers,
         )
@@ -647,7 +647,7 @@ def api1_typeahead(req):
 
 def api1_websocket(environ, start_response):
     req = webob.Request(environ)
-    ctx = contexts.Ctx(req)
+#    ctx = contexts.Ctx(req)
 #    headers = wsgihelpers.handle_cross_origin_resource_sharing(ctx)
 
     assert req.method == 'GET'

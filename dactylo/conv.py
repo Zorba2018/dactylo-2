@@ -34,6 +34,30 @@ from biryani1.jsonconv import *
 from biryani1.states import default_state, State
 
 
+def account_to_object(value, state = None):
+    if value is None:
+        return value, None
+    if state is None:
+        state = default_state
+    return dict(
+        description = value.get('description'),
+        email = value.get('email'),
+        displayName = value.get('full_name') or value.get('email'),
+#        image = value.get('image_url'),
+        ), None
+
+
+def dataset_to_object(value, state = None):
+    if value is None:
+        return value, None
+    if state is None:
+        state = default_state
+    return dict(
+        description = value.get('notes'),
+        displayName = value.get('title'),
+        ), None
+
+
 input_to_token = cleanup_line
 
 
@@ -65,3 +89,33 @@ def method(method_name, *args, **kwargs):
             return value, None
         return getattr(value, method_name)(state or default_state, *args, **kwargs)
     return method_converter
+
+
+def related_link_to_object(value, state = None):
+    if value is None:
+        return value, None
+    if state is None:
+        state = default_state
+    return dict(
+        description = value.get('description'),
+        displayName = value.get('title'),
+        image = value.get('image_url'),
+        url = value.get('url'),
+        ), None
+
+
+specific_activity_to_activity = pipe(
+    function(lambda activity: activity.value),
+    test_isinstance(dict),
+    struct(
+        dict(
+            actor = account_to_object,
+            object = related_link_to_object,
+            target = dataset_to_object,
+            verb = pipe(
+                test_isinstance(basestring),
+                not_none,
+                ),
+            ),
+        ),
+    )
