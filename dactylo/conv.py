@@ -42,7 +42,7 @@ def account_to_object(value, state = None):
     return dict(
         description = value.get('description'),
         email = value.get('email'),
-        displayName = value.get('full_name') or value.get('email'),
+        displayName = value.get('fullname') or value.get('email'),
 #        image = value.get('image_url'),
         ), None
 
