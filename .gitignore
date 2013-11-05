@@ -1,0 +1,15 @@
+build/
+cache/
+dactylo/static/.webassets-cache/
+dactylo/static/bower/
+dactylo/static/css/site-less.css
+dactylo/static/css/site.min.css
+development-*.ini
+dist/
+projects-*.ini
+*.egg-info
+*.mo
+*.pyc
+*.pyo
+*~
+

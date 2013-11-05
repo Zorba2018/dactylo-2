@@ -1,0 +1,8 @@
+[main]
+host = https://www.transifex.com
+
+[dactylo.python]
+file_filter = dactylo/i18n/<lang>/LC_MESSAGES/dactylo.po
+source_file = dactylo/i18n/dactylo.pot
+source_lang = en
+
