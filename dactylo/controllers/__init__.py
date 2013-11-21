@@ -32,7 +32,7 @@ import logging
 import pymongo
 
 from .. import contexts, conv, model, paginations, templates, urls, wsgihelpers
-from . import accounts, activities, sessions
+from . import accounts, activities, sessions, states, websockets
 
 
 log = logging.getLogger(__name__)
@@ -49,7 +49,7 @@ def index(req):
     generic_activities = conv.check(conv.uniform_sequence(
         conv.specific_activity_to_activity,
         ))(cursor.skip(pager.first_item_index or 0).limit(pager.page_size), state = ctx)
-    return templates.render(ctx, '/index.mako', activities = generic_activities)
+    return templates.render(ctx, '/index.mako', activities = generic_activities, states = model.states)
 
 
 def make_router():
@@ -63,6 +63,8 @@ def make_router():
         (None, '^/admin/sessions(?=/|$)', sessions.route_admin_class),
         (None, '^/api/1/accounts(?=/|$)', accounts.route_api1_class),
         (None, '^/api/1/activities(?=/|$)', activities.route_api1_class),
+        (None, '^/api/1/states(?=/|$)', states.route_api1_class),
+        (None, '^/api/1/websocket(?=/|$)', websockets.route_api1_class),
         ('POST', '^/login/?$', accounts.login),
         ('POST', '^/logout/?$', accounts.logout),
         )

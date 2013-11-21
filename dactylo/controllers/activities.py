@@ -27,14 +27,13 @@
 
 
 import collections
+import json
 import logging
 import re
 
 import pymongo
 import webob
 import webob.multidict
-import ws4py.server.wsgiutils
-import ws4py.websocket
 
 from .. import contexts, conv, model, paginations, templates, urls, wsgihelpers
 
@@ -62,21 +61,6 @@ json_to_pseudo_activity = conv.pipe(
         ),
     )
 log = logging.getLogger(__name__)
-websocket_clients = []
-
-
-class WebSocketEmitter(ws4py.websocket.WebSocket):
-    def closed(self, code, reason = None):
-        try:
-            websocket_clients.remove(self)
-        except ValueError:
-            # Client is missing from list.
-            pass
-
-    def opened(self):
-        websocket_clients.append(self)
-
-websocket_emitter_app = ws4py.server.wsgiutils.WebSocketWSGIApplication(handler_cls = WebSocketEmitter)
 
 
 @wsgihelpers.wsgify
@@ -594,8 +578,12 @@ def api1_new(req):
 
 #    message = unicode(json.dumps(activity.value, encoding = 'utf-8', ensure_ascii = False, indent = 2)).encode('utf-8')
     generic_activity = conv.check(conv.specific_activity_to_activity)(activity, state = ctx)
-    message = templates.render_def(ctx, '/activities/snippets.mako', 'activity_row', activity = generic_activity)
-    for client in websocket_clients:
+    block = templates.render_def(ctx, '/activities/snippets.mako', 'activity_row', activity = generic_activity)
+    message = unicode(json.dumps(dict(
+            action = u'activity',
+            block = block,
+            ), encoding = 'utf-8', ensure_ascii = False, indent = 2))
+    for client in model.websocket_clients:
         client.send(message)
 
     return wsgihelpers.respond_json(ctx,
@@ -643,23 +631,6 @@ def api1_typeahead(req):
             ],
         headers = headers,
         )
-
-
-def api1_websocket(environ, start_response):
-    req = webob.Request(environ)
-#    ctx = contexts.Ctx(req)
-#    headers = wsgihelpers.handle_cross_origin_resource_sharing(ctx)
-
-    assert req.method == 'GET'
-#    params = req.GET
-#    inputs = dict(
-#        first_key = params.get('first_key'),
-#        keys = params.get('keys'),
-#        limit = params.get('limit'),
-#        values = params.get('values'),
-#        )
-
-    return websocket_emitter_app(environ, start_response)
 
 
 def extract_activity_inputs_from_params(ctx, params = None):
@@ -791,7 +762,6 @@ def route_api1_class(environ, start_response):
         ('GET', '^/?$', api1_index),
         ('POST', '^/?$', api1_new),
         ('GET', '^/typeahead/?$', api1_typeahead),
-        ('GET', '^/websocket/?$', api1_websocket),
         (None, '^/(?P<id_or_slug_or_words>[^/]+)(?=/|$)', route_api1),
         )
     return router(environ, start_response)

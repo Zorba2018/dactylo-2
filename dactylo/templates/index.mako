@@ -34,10 +34,12 @@ from dactylo import model, texthelpers, urls
 
 <%inherit file="site.mako"/>
 <%namespace name="activities_snippets" file="activities/snippets.mako"/>
+<%namespace name="states_snippets" file="states/snippets.mako"/>
 
 
 <%def name="activities_table()" filter="trim">
-        <table class="table table-bordered table-condensed table-striped" id="activities">
+        <%states_snippets:states_div states="${states}"/>
+        <table class="table table-bordered table-condensed table-striped">
             <thead>
                 <tr>
                     <th>${_(u"Actor")}</th>
@@ -46,7 +48,7 @@ from dactylo import model, texthelpers, urls
                     <th>${_(u"Target")}</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="activities">
     % for activity in activities:
                 <%activities_snippets:activity_row activity="${activity}"/>
     % endfor
@@ -70,22 +72,19 @@ from dactylo import model, texthelpers, urls
 <%def name="scripts()" filter="trim">
     <%parent:scripts/>
     <script>
-$(function () {
+function startWebSocket() {
+    var websocketUrl = ${urls.get_full_url(ctx, 'api', 1, 'websocket').replace('http', 'ws', 1) | n, js};
     var ws;
-    var websocketUrl = ${urls.get_full_url(ctx, 'api', 1, 'activities', 'websocket').replace('http', 'ws', 1) | n, js};
     if (window.WebSocket) {
         ws = new WebSocket(websocketUrl);
-    }
-    else if (window.MozWebSocket) {
+    } else if (window.MozWebSocket) {
         ws = MozWebSocket(websocketUrl);
-    }
-    else {
+    } else {
         console.log('WebSocket Not Supported');
         return;
     }
 
     window.onbeforeunload = function (e) {
-##        $('#chat').val($('#chat').val() + 'Bye bye...\\n');
         ws.close(1000, 'Left the room');
 
         if(!e) {
@@ -95,17 +94,29 @@ $(function () {
         e.preventDefault();
     };
 
-    ws.onmessage = function (evt) {
-        $('#activities').prepend(evt.data);
-    };
-
-    ws.onopen = function() {
-##        ws.send("Entered the room");
-    };
-
     ws.onclose = function(evt) {
-##        $('#chat').val($('#chat').val() + 'Connection closed by server: ' + evt.code + ' \"' + evt.reason + '\"\\n');
+        // Try to reconnect in 5 seconds.
+        setTimeout(startWebSocket, 5000);
     };
+
+    ws.onmessage = function (evt) {
+        data = $.parseJSON(evt.data);
+        var action = data.action;
+        if (action == 'activity') {
+            $('#activities').prepend(data.block);
+        } else if (action == 'states') {
+            $('#states').html(data.block);
+        }
+    };
+
+##    ws.onopen = function() {
+##        ws.send("Entered the room");
+##    };
+}
+
+
+$(function () {
+    startWebSocket();
 });
     </script>
 </%def>
