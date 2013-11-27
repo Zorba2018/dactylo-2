@@ -62,6 +62,66 @@ log = logging.getLogger(__name__)
 
 
 @wsgihelpers.wsgify
+def api1_get(req):
+    ctx = contexts.Ctx(req)
+    headers = wsgihelpers.handle_cross_origin_resource_sharing(ctx)
+
+    assert req.method == 'GET', req.method
+    params = req.GET
+    inputs = dict(
+        callback = params.get('callback'),
+        context = params.get('context'),
+        )
+    data, errors = conv.pipe(
+        conv.struct(
+            dict(
+                callback = conv.pipe(
+                    conv.test_isinstance(basestring),
+                    conv.cleanup_line,
+                    ),
+                context = conv.test_isinstance(basestring),
+                ),
+            ),
+        )(inputs, state = ctx)
+    if errors is not None:
+        return wsgihelpers.respond_json(ctx,
+            dict(
+                apiVersion = '1.0',
+                context = inputs['context'],
+                error = dict(
+                    code = 400,  # Bad Request
+                    errors = [
+                        dict(
+                            location = key,
+                            message = error,
+                            )
+                        for key, error in sorted(errors.iteritems())
+                        ],
+                    # message will be automatically defined.
+                    ),
+                method = req.script_name,
+                params = inputs,
+                url = req.url.decode('utf-8'),
+                ),
+            headers = headers,
+            jsonp = inputs['callback'],
+            )
+
+    return wsgihelpers.respond_json(ctx,
+        collections.OrderedDict(sorted(dict(
+            apiVersion = '1.0',
+            context = data['context'],
+            method = req.script_name,
+            params = inputs,
+            url = req.url.decode('utf-8'),
+            value = model.metrics,
+            ).iteritems())),
+        headers = headers,
+        jsonp = data['callback'],
+        )
+
+
+@wsgihelpers.wsgify
 def api1_set(req):
     ctx = contexts.Ctx(req)
     headers = wsgihelpers.handle_cross_origin_resource_sharing(ctx)
@@ -181,6 +241,7 @@ def api1_set(req):
 
 def route_api1_class(environ, start_response):
     router = urls.make_router(
+        ('GET', '^/?$', api1_get),
         ('POST', '^/?$', api1_set),
         )
     return router(environ, start_response)
