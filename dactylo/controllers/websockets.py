@@ -33,18 +33,18 @@ import ws4py.websocket
 from .. import model, urls
 
 
-class WebSocketEmitter(ws4py.websocket.WebSocket):
-    def closed(self, code, reason = None):
-        try:
-            model.websocket_clients.remove(self)
-        except ValueError:
-            # Client is missing from list.
-            pass
+#class WebSocketEmitter(ws4py.websocket.WebSocket):
+#    def closed(self, code, reason = None):
+#        try:
+#            model.websocket_clients.remove(self)
+#        except ValueError:
+#            # Client is missing from list.
+#            pass
 
-    def opened(self):
-        model.websocket_clients.append(self)
+#    def opened(self):
+#        model.websocket_clients.append(self)
 
-websocket_emitter_app = ws4py.server.wsgiutils.WebSocketWSGIApplication(handler_cls = WebSocketEmitter)
+#websocket_emitter_app = ws4py.server.wsgiutils.WebSocketWSGIApplication(handler_cls = WebSocketEmitter)
 
 
 class WebSocketMetricsEmitter(ws4py.websocket.WebSocket):
@@ -61,21 +61,21 @@ class WebSocketMetricsEmitter(ws4py.websocket.WebSocket):
 websocket_metrics_emitter_app = ws4py.server.wsgiutils.WebSocketWSGIApplication(handler_cls = WebSocketMetricsEmitter)
 
 
-def api1_listen(environ, start_response):
-    req = webob.Request(environ)
-#    ctx = contexts.Ctx(req)
-#    headers = wsgihelpers.handle_cross_origin_resource_sharing(ctx)
+#def api1_listen(environ, start_response):
+#    req = webob.Request(environ)
+##    ctx = contexts.Ctx(req)
+##    headers = wsgihelpers.handle_cross_origin_resource_sharing(ctx)
 
-    assert req.method == 'GET'
-#    params = req.GET
-#    inputs = dict(
-#        first_key = params.get('first_key'),
-#        keys = params.get('keys'),
-#        limit = params.get('limit'),
-#        values = params.get('values'),
-#        )
+#    assert req.method == 'GET'
+##    params = req.GET
+##    inputs = dict(
+##        first_key = params.get('first_key'),
+##        keys = params.get('keys'),
+##        limit = params.get('limit'),
+##        values = params.get('values'),
+##        )
 
-    return websocket_emitter_app(environ, start_response)
+#    return websocket_emitter_app(environ, start_response)
 
 
 def api1_metrics(environ, start_response):
@@ -90,7 +90,7 @@ def api1_metrics(environ, start_response):
 
 def route_api1_class(environ, start_response):
     router = urls.make_router(
-        ('GET', '^/?$', api1_listen),
+#        ('GET', '^/?$', api1_listen),
         ('GET', '^/metrics/?$', api1_metrics),
         )
     return router(environ, start_response)
