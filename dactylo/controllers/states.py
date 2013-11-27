@@ -30,33 +30,33 @@ import collections
 import json
 import logging
 
-from .. import contexts, conv, model, templates, urls, wsgihelpers
+from .. import contexts, conv, model, urls, wsgihelpers
 
 
-json_to_states = conv.pipe(
+json_to_metrics = conv.pipe(
     conv.test_isinstance(dict),
-    conv.struct(
-        dict(
-            datasets = conv.pipe(
-                conv.test_isinstance(dict),
-                conv.struct(
-                    dict(
-                        count = conv.pipe(
-                            conv.test_isinstance(int),
-                            conv.test_greater_or_equal(0),
-                            conv.not_none,
-                            ),
-                        weights = conv.pipe(
-                            conv.test_isinstance(float),
-                            conv.test_greater_or_equal(0.0),
-                            conv.not_none,
-                            ),
-                        ),
-                    ),
-                conv.not_none,
-                ),
-            ),
-        ),
+#    conv.struct(
+#        dict(
+#            datasets = conv.pipe(
+#                conv.test_isinstance(dict),
+#                conv.struct(
+#                    dict(
+#                        count = conv.pipe(
+#                            conv.test_isinstance(int),
+#                            conv.test_greater_or_equal(0),
+#                            conv.not_none,
+#                            ),
+#                        weights = conv.pipe(
+#                            conv.test_isinstance(float),
+#                            conv.test_greater_or_equal(0.0),
+#                            conv.not_none,
+#                            ),
+#                        ),
+#                    ),
+#                conv.not_none,
+#                ),
+#            ),
+#        ),
     )
 log = logging.getLogger(__name__)
 
@@ -105,7 +105,7 @@ def api1_set(req):
                 )
         inputs_converters.update(dict(
             value = conv.pipe(
-                json_to_states,
+                json_to_metrics,
                 conv.not_none,
                 ),
             ))
@@ -115,7 +115,7 @@ def api1_set(req):
         inputs_converters.update(dict(
             value = conv.pipe(
                 conv.make_input_to_json(),
-                json_to_states,
+                json_to_metrics,
                 conv.not_none,
                 ),
             ))
@@ -161,13 +161,9 @@ def api1_set(req):
             headers = headers,
             )
 
-    model.states = data['value']
-    block = templates.render_def(ctx, '/states/snippets.mako', 'states_div', states = model.states)
-    message = unicode(json.dumps(dict(
-            action = u'states',
-            block = block,
-            ), encoding = 'utf-8', ensure_ascii = False, indent = 2))
-    for client in model.websocket_clients:
+    model.metrics = data['value']
+    message = unicode(json.dumps(model.metrics, encoding = 'utf-8', ensure_ascii = False, indent = 2))
+    for client in model.websocket_metrics_clients:
         client.send(message)
 
     return wsgihelpers.respond_json(ctx,
@@ -177,7 +173,7 @@ def api1_set(req):
             method = req.script_name,
             params = inputs,
             url = req.url.decode('utf-8'),
-            value = model.states,
+            value = model.metrics,
             ).iteritems())),
         headers = headers,
         )

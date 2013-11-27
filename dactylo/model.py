@@ -37,9 +37,11 @@ import bson
 from . import objects, urls, wsgihelpers
 
 
-states = {}
+metrics = {}
 uuid_re = re.compile(ur'[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$')
+states = {}
 websocket_clients = []
+websocket_metrics_clients = []
 
 
 class Account(objects.Initable, objects.JsonMonoClassMapper, objects.Mapper, objects.ActivityStreamWrapper):
