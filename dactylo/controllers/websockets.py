@@ -26,6 +26,8 @@
 """Controllers for websockets"""
 
 
+import json
+
 import webob
 import ws4py.server.wsgiutils
 import ws4py.websocket
@@ -57,6 +59,9 @@ class WebSocketMetricsEmitter(ws4py.websocket.WebSocket):
 
     def opened(self):
         model.websocket_metrics_clients.append(self)
+
+        message = unicode(json.dumps(model.metrics, encoding = 'utf-8', ensure_ascii = False, indent = 2))
+        self.send(message)
 
 websocket_metrics_emitter_app = ws4py.server.wsgiutils.WebSocketWSGIApplication(handler_cls = WebSocketMetricsEmitter)
 
