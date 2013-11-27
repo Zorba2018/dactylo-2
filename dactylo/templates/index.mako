@@ -73,7 +73,7 @@ from dactylo import model, texthelpers, urls
     <%parent:scripts/>
     <script>
 function startWebSocket() {
-    var websocketUrl = ${urls.get_full_url(ctx, 'api', 1, 'websocket').replace('http', 'ws', 1) | n, js};
+    var websocketUrl = ${urls.get_full_url(ctx, 'api', 1, 'websocket', 'metrics').replace('http', 'ws', 1) | n, js};
     var ws;
     if (window.WebSocket) {
         ws = new WebSocket(websocketUrl);
@@ -101,12 +101,13 @@ function startWebSocket() {
 
     ws.onmessage = function (evt) {
         data = $.parseJSON(evt.data);
-        var action = data.action;
-        if (action == 'activity') {
-            $('#activities').prepend(data.block);
-        } else if (action == 'states') {
-            $('#states').html(data.block);
-        }
+        $('#states').text(evt.data);
+##        var action = data.action;
+##        if (action == 'activity') {
+##            $('#activities').prepend(data.block);
+##        } else if (action == 'states') {
+##            $('#states').html(data.block);
+##        }
     };
 
 ##    ws.onopen = function() {
