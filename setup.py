@@ -74,7 +74,7 @@ setup(
     install_requires = [
         'Biryani1 >= 0.9dev',
         'bleach >= 1.2',
-        'Mako >= 0.8',
+        'Mako >= 0.7',
         'PyYAML',
         'pymongo >= 2.2',
         'requests >= 1.2',
