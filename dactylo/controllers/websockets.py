@@ -32,7 +32,7 @@ import webob
 import ws4py.server.wsgiutils
 import ws4py.websocket
 
-from .. import model, urls
+from .. import contexts, model, urls, wsgihelpers
 
 
 #class WebSocketEmitter(ws4py.websocket.WebSocket):
@@ -85,12 +85,15 @@ websocket_metrics_emitter_app = ws4py.server.wsgiutils.WebSocketWSGIApplication(
 
 def api1_metrics(environ, start_response):
     req = webob.Request(environ)
-#    ctx = contexts.Ctx(req)
+    ctx = contexts.Ctx(req)
 #    headers = wsgihelpers.handle_cross_origin_resource_sharing(ctx)
 
     assert req.method == 'GET'
 
-    return websocket_metrics_emitter_app(environ, start_response)
+    try:
+        return websocket_metrics_emitter_app(environ, start_response)
+    except ws4py.server.wsgiutils.HandshakeError as error:
+        return wsgihelpers.bad_request(ctx, explanation = ctx._(u'WebSocket Handshake Error: {0}').format(error))
 
 
 def route_api1_class(environ, start_response):
